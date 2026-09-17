@@ -1,0 +1,32 @@
+services:
+  redis:
+    image: redis/redis-stack:7.4.0-v1
+    ports: ["6379:6379", "8001:8001"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mock-providers:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    ports: ["8089:8089"]
+    environment:
+      PORT: "8089"
+
+  gateway:
+    build: .
+    ports: ["8080:8080", "9090:9090"]
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      mock-providers:
+        condition: service_started
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_BASE_URL: http://mock-providers:8089/v1
+      ANTHROPIC_BASE_URL: http://mock-providers:8089/anthropic
+      VLLM_BASE_URL: http://mock-providers:8089/vllm

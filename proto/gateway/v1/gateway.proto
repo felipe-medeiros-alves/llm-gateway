@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package gateway.v1;
+
+option go_package = "github.com/meta/llm-gateway/gen/gateway/v1;gatewayv1";
+
+message ChatMessage {
+  string role = 1;
+  string content = 2;
+}
+
+message ChatRequest {
+  string api_key = 1;
+  string model = 2;
+  repeated ChatMessage messages = 3;
+  int32 max_tokens = 4;
+}
+
+message ChatChunk {
+  string delta = 1;
+  bool done = 2;
+  string provider = 3;
+  bool cached = 4;
+}
+
+service GatewayService {
+  rpc ChatCompletion(ChatRequest) returns (stream ChatChunk);
+}
