@@ -1,0 +1,12 @@
+FROM golang:1.22-alpine AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+COPY vendor ./vendor
+COPY scripts/mockserver ./scripts/mockserver
+RUN CGO_ENABLED=0 go build -mod=vendor -o /mock ./scripts/mockserver
+
+FROM alpine:3.20
+COPY --from=build /mock /mock
+ENV PORT=8089
+EXPOSE 8089
+ENTRYPOINT ["/mock"]
